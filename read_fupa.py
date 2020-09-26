@@ -9,9 +9,11 @@ try:
 except ImportError:
     from bs4 import BeautifulSoup
 
-
 # you need to install wkhtmltopdf
 # sudo apt install wkhtmltopdf
+
+path = 'd:\\fupa\\'  # {]\\'.format(date.today().strftime('%Y%m%d'))
+path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
 
 html_head = '<!DOCTYPE html><html>'\
             '<head > <meta charset="utf-8">'\
@@ -156,34 +158,34 @@ def print_tabelle(liga, spieltag, ligatabelle):
     html += '</table></body></html>'
     imgkit.from_string(html, path + liga + 'Tabelle_II.png', options=options)
 
+def main():
+    if os.path.exists(path):
+        ligen = list()
+        liga = {'name':'Verbandsliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-verbandsliga'}
+        ligen.append(liga)
+        liga = {'name':'Landesliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesliga-sued'}
+        ligen.append(liga)
+        liga = {'name':'Kreisoberliga', 'url':'https://www.fupa.net/liga/mansfeld-suedharz-kreisoberliga'}
+        ligen.append(liga)
+        liga = {'name':'Landeskl. 4', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesklasse-4'}
+        ligen.append(liga)
+        liga = {'name':'Landeskl. 6', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesklasse-6'}
+        ligen.append(liga)
+        for li in ligen:
+            spieltag = -1
+            liga = li['name']
+            print(liga)
+            url = li['url']
+            tabelle = get_tabelle(url + '/tabelle')
+            for pos in tabelle:
+                spieltag = max(spieltag, int(pos['spiele']))
+            print_tabelle(liga, spieltag, tabelle)
+            erg = get_results(url + '/spielplan')
+            print_ergebnisse(liga, spieltag, erg[str(spieltag)])
+        print('fertig')
+    else:
+        print(path + ' nicht gefunden, bitte erstellen')
+    exit(0)
 
-path = 'd:\\fupa\\'# {]\\'.format(date.today().strftime('%Y%m%d'))
-path = '/home/juergen/Projekte/fupa/fupa/'
-ligen = list()
-liga = {'name':'Verbandsliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-verbandsliga'}
-ligen.append(liga)
-liga = {'name':'Landesliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesliga-sued'}
-ligen.append(liga)
-liga = {'name':'Kreisoberliga', 'url':'https://www.fupa.net/liga/mansfeld-suedharz-kreisoberliga'}
-ligen.append(liga)
-liga = {'name':'Landeskl. 4', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesklasse-4'}
-ligen.append(liga)
-liga = {'name':'Landeskl. 6', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesklasse-6'}
-ligen.append(liga)
-
-
-for li in ligen:
-    spieltag = -1
-    liga = li['name']
-    print(liga)
-    url = li['url']
-    tabelle = get_tabelle(url + '/tabelle')
-    for pos in tabelle:
-        spieltag = max(spieltag, int(pos['spiele']))
-    print_tabelle(liga, spieltag, tabelle)
-    erg = get_results(url + '/spielplan')
-    print_ergebnisse(liga, spieltag, erg[str(spieltag)])
-
-print('fertig')
-
-exit(0)
+if __name__ == "__main__":
+    main()
