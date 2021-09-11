@@ -92,25 +92,26 @@ def show_html(html):
 def get_tabelle(url):
     soup = BeautifulSoup(fetchurl(url), 'html.parser')
     ligatabelle = list()
-    ltab = soup.find("table", {"class": "liga_tabelle"})
-    for tr in ltab.findAll('tr'):
-        nr = tr.find("td", {"class": "tabelle_nummer"})
-        if nr is not None:
-            platz = tr.find("td", {"class": "tabelle_nummer"})
-            mannschaft = tr.find("td", {"class": "tab_team_name"})
-            spiele = tr.find("td", {"class": "tabelle_nummer tab_games"})
-            tordiff = tr.find("td", {"class": "tabelle_nummer tab_diff"})
-            punkte = tr.find("td", {"class": "tabelle_nummer tab_points"})
-            veraenderung = tr.find("td", {"class": "aufab tab_aufab"})
-            platzierung = dict()
-            platzierung['platz'] = platz.text.strip()
-            platzierung['mannschaft'] = mannschaft.text.replace('LIVE', '').strip()
-            platzierung['spiele'] = spiele.text.strip()
-            platzierung['tordiff'] = tordiff.text.strip()
-            platzierung['punkte'] = punkte.text.strip()
-            platzierung['veraenderung'] = veraenderung.text.strip()
-            ligatabelle.append(platzierung)
+    ltab = soup.findAll('div', {"class": "sc-1nnnh72-4 hQapSL"})
+    for row in ltab:
+        platz = row.find('span', {"class": "sc-bdfBwQ cvbBOD"})
+
+
+        mannschaft = row.find('span', {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"})
+        spiele = row.find('span', {"class": "sc-bdfBwQ cvbBOD"})
+        punkte = row.find('span', {"class": "sc-1nnnh72-1 cGvom"})
+        tordiff = row.find('span', {"class": "sc-bdfBwQ cvbBOD"})
+        veraenderung = None # row.find('span', {"class": ""})
+        platzierung = dict()
+        platzierung['platz'] = platz.text.strip()
+        platzierung['mannschaft'] = mannschaft.text.replace('LIVE', '').strip()
+        platzierung['spiele'] = spiele.text.strip()
+        platzierung['tordiff'] = tordiff.text.strip()
+        platzierung['punkte'] = punkte.text.strip()
+        # platzierung['veraenderung'] = veraenderung.text.strip()
+        ligatabelle.append(platzierung)
     return ligatabelle
+
 
 
 def print_ergebnisse(liga, spieltag, ergebnisse):
@@ -161,7 +162,7 @@ def print_tabelle(liga, spieltag, ligatabelle):
 def main():
     if os.path.exists(path):
         ligen = list()
-        liga = {'name':'Verbandsliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-verbandsliga'}
+        liga = {'name': 'Verbandsliga', 'url': 'https://www.fupa.net/league/sachsen-anhalt-verbandsliga-sued'}
         ligen.append(liga)
         liga = {'name':'Landesliga', 'url':'https://www.fupa.net/liga/sachsen-anhalt-landesliga-sued'}
         ligen.append(liga)
@@ -176,11 +177,11 @@ def main():
             liga = li['name']
             print(liga)
             url = li['url']
-            tabelle = get_tabelle(url + '/tabelle')
+            tabelle = get_tabelle(url + '/standing')
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle)
-            erg = get_results(url + '/spielplan')
+            erg = get_results(url + '/matches')
             print_ergebnisse(liga, spieltag, erg[str(spieltag)])
         print('fertig')
     else:
