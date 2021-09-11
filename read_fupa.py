@@ -95,8 +95,6 @@ def get_tabelle(url):
     ltab = soup.findAll('div', {"class": "sc-1nnnh72-4 hQapSL"})
     for row in ltab:
         platz = row.find('span', {"class": "sc-bdfBwQ cvbBOD"})
-
-
         mannschaft = row.find('span', {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"})
         spiele = row.find('span', {"class": "sc-bdfBwQ cvbBOD"})
         punkte = row.find('span', {"class": "sc-1nnnh72-1 cGvom"})
