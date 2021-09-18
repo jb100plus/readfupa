@@ -16,12 +16,17 @@ path = 'd:\\fupa\\'  # {]\\'.format(date.today().strftime('%Y%m%d'))
 path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
 wochentage = ('Mo', 'Die', 'Mi', 'Do', 'Fr', 'Sa', 'So')
 
+# '.erg {background-color: rgba(0, 0, 0, 0.5); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
+# '.erg {background-color: rgba(255, 255, 255, 0); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
+# mit . definiert man class, die einem Element zugewiesen werden können
 html_head = '<!DOCTYPE html><html>'\
             '<head > <meta charset="utf-8">'\
-            '<style>td {padding: 5px 15px 5px 15px}</style >'\
-            '<style>caption {padding: 25px 15px 25px 15px}</style >' \
-            '<style>.erg {background-color: rgba(255, 255, 255, 0); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}</style >' \
-            '<style>.tab {background-color: rgba(255, 255, 255, 0); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}</style >' \
+            '<style>' \
+            'td {padding: 5px 15px 5px 15px}'\
+            'caption {padding: 25px 15px 25px 15px}' \
+            '.erg {font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
+            '.tab {font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
+            '</style >' \
             '</head>'
 
 def fetchurl(url):
@@ -37,68 +42,67 @@ def fetchurl(url):
     return html
 
 
-def get_results(url):
-    erg_spieltage = dict()
-
+def get_results(url, last_matchday):
+    results = dict()
     spsoup = BeautifulSoup(fetchurl(url), 'html.parser')
-    news = spsoup.findAll('div', {"class": "sc-4y67w2-19 kGXFCX"})
-
-    for newsbox in news:
-        ergebnisse = list()
-        header = newsbox.find('div', {"class": "sc-4y67w2-14 dnRykN"}).text.strip()
+    matchday_divs = spsoup.findAll('div', {"class": "sc-4y67w2-19 kGXFCX"})
+    for matchday_div in matchday_divs:
+        matchday_results = list()
+        header = matchday_div.find('div', {"class": "sc-4y67w2-14 dnRykN"}).text.strip()
         if 'Spieltag' in header:
-
-            datum = newsbox.find('div', {"class": "sc-4y67w2-15 hYAxxY"}).text.strip()
-
-            st_temp = header.split(',')[1]
-            st_temp = st_temp.split('.')[0]
-            st_temp = st_temp.strip()
-            spieltag =  int(st_temp)
-
-            zeilen = newsbox.findAll('div', {"class": "sc-1rxhndz-0 hfLeQi"})
-            for zeile in zeilen:
-                namen = zeile.findAll('div', {"class": "sc-1rxhndz-1 fTnXZf"})
-                heim = namen[0].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
-                heimzusatz = namen[0].find("span", {"class": "sc-bdfBwQ cvbBOD"})
-                if heimzusatz is not None:
-                    heimzusatz = heimzusatz.text.strip()
-                else:
-                    heimzusatz = ''
-                gast = namen[1].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
-                gastzusatz = namen[1].find("span", {"class": "sc-bdfBwQ cvbBOD"})
-                if gastzusatz is not None:
-                    gastzusatz = gastzusatz.text.strip()
-                else:
-                    gastzusatz = ''
-                endstand = zeile.find("span", {"class": "sc-bdfBwQ fduPYt"})
-                # noch offen
-                if endstand is None:
-                    endstand = zeile.find("span", {"class": "sc-bdfBwQ kvOzcQ"})
-                # abgesagt
-                if endstand is None:
-                    endstand = zeile.find("span", {"class": "sc-bdfBwQ fwsGyn sc-1rxhndz-6 iBFqGw"})
-                if endstand is not None:
-                    endstand = endstand.text.strip()
-
-                ergebnis = dict()
-                ergebnis['datum'] = datum
-                ergebnis['name_heim'] = heim + ' ' + heimzusatz
-                ergebnis['name_gast'] = gast + ' ' + gastzusatz
+            matchday_date = matchday_div.find('div', {"class": "sc-4y67w2-15 hYAxxY"}).text.strip()
+            mdtemp = header.split(',')[1]
+            mdtemp = mdtemp.split('.')[0]
+            mdtemp = mdtemp.strip()
+            matchday =  int(mdtemp)
+            if matchday == last_matchday:
+                lines = matchday_div.findAll('div', {"class": "sc-1rxhndz-0 hfLeQi"})
+                for line in lines:
+                    result = get_match_result(matchday_date, line)
+                    matchday_results.append(result)
                 try:
-                    ergebnis['tore_heim'] = endstand.split(':')[0]
-                    ergebnis['tore_gast'] = endstand.split(':')[1]
-                except:
-                    pass
-                ergebnis['endstand'] = endstand
-                ergebnisse.append(ergebnis)
-            try:
-                spo = erg_spieltage[str(spieltag)]
-                sp = spo + ergebnisse
-                erg_spieltage[str(spieltag)] = sp
-            except KeyError:
-                erg_spieltage[str(spieltag)] = ergebnisse
+                    spo = results[str(matchday)]
+                    sp = spo + matchday_results
+                    results[str(matchday)] = sp
+                except KeyError:
+                    results[str(matchday)] = matchday_results
+    return results
 
-    return erg_spieltage
+
+def get_match_result(matchday_date, zeile):
+    teams = zeile.findAll('div', {"class": "sc-1rxhndz-1 fTnXZf"})
+    team_home = teams[0].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
+    team_home_add = teams[0].find("span", {"class": "sc-bdfBwQ cvbBOD"})
+    if team_home_add is not None:
+        team_home_add = team_home_add.text.strip()
+    else:
+        team_home_add = ''
+    team_guest = teams[1].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
+    team_guest_add = teams[1].find("span", {"class": "sc-bdfBwQ cvbBOD"})
+    if team_guest_add is not None:
+        team_guest_add = team_guest_add.text.strip()
+    else:
+        team_guest_add = ''
+    final_score = zeile.find("span", {"class": "sc-bdfBwQ fduPYt"})
+    # not yet finished
+    if final_score is None:
+        final_score = zeile.find("span", {"class": "sc-bdfBwQ kvOzcQ"})
+    # canceled
+    if final_score is None:
+        final_score = zeile.find("span", {"class": "sc-bdfBwQ fwsGyn sc-1rxhndz-6 iBFqGw"})
+    if final_score is not None:
+        final_score = final_score.text.strip()
+    result = dict()
+    result['datum'] = matchday_date
+    result['name_heim'] = team_home + ' ' + team_home_add
+    result['name_gast'] = team_guest + ' ' + team_guest_add
+    try:
+        result['tore_heim'] = final_score.split(':')[0]
+        result['tore_gast'] = final_score.split(':')[1]
+    except:
+        pass
+    result['endstand'] = final_score
+    return result
 
 
 def show_html(html):
@@ -137,19 +141,18 @@ def get_tabelle(url):
 
 
 def print_ergebnisse(liga, spieltag, ergebnisse):
-    #for erg in ergebnisse:
-    #    print(erg['name_heim'], erg['name_gast'],erg['tore_heim'],erg['tore_heim'])
-
     html = html_head
     html += '<body class="erg"><table><caption>Ergebnisse {}. Spieltag {}</caption>'.format(spieltag, liga)
-    for erg in ergebnisse:
-        # html += '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}:{}</td></tr>'.format(erg['datum'],erg['name_heim'], erg['name_gast'],erg['tore_heim'],erg['tore_gast'])
+    # print('Ergebnisse {}. Spieltag {}'.format(spieltag, liga))
+    # [::-1] damit die Liste chronologisch sortiert ist
+    for erg in ergebnisse[::-1]:
         datum = datetime.datetime.strptime(erg['datum'], '%d.%m.%Y')
         wt_tag = '{}., {}'.format(wochentage[datum.date().weekday()], datum.strftime('%d.%m.' ))
-        html += '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>'.format(wt_tag, erg['name_heim'],
-                                                                                  erg['name_gast'], erg['endstand'])
+        # print('{} {:<20} : {:<20} {:<8}'.format(wt_tag, erg['name_heim'], erg['name_gast'], erg['endstand']))
+        html += f"<tr><td>{wt_tag}</td><td>{erg['name_heim']}</td><td>-</td>" \
+                f"<td>{erg['name_gast']}</td><td>{erg['endstand']}</td></tr>"
     html += '</table></div></body></html>'
-    #show_html(html)
+    # show_html(html)
     options = {'width': 1200, 'transparent': '','quiet': ''}
     imgkit.from_string(html, path + liga + '_Ergebnis.png', options=options)
 
@@ -206,8 +209,8 @@ def main():
         ligen.append(liga)
         liga = {'name':'1. Kreisklasse 2', 'url':'https://www.fupa.net/league/mansfeld-suedharz-erste-kreisklasse-2'}
         ligen.append(liga)
-        for li in ligen:
 
+        for li in ligen:
             spieltag = -1
             liga = li['name']
             print(liga)
@@ -216,7 +219,7 @@ def main():
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle)
-            erg = get_results(url + '/matchday')
+            erg = get_results(url + '/matchday', spieltag)
             print_ergebnisse(liga, spieltag, erg[str(spieltag)])
         print('fertig')
     else:
