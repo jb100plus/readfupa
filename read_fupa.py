@@ -56,10 +56,12 @@ def get_results(url, last_matchday):
             mdtemp = mdtemp.strip()
             matchday =  int(mdtemp)
             if matchday == last_matchday:
-                lines = matchday_div.findAll('div', {"class": "sc-1rxhndz-0 hfLeQi"})
+                lines = matchday_div.findAll('div', {"class": "sc-1rxhndz-2 kjfxdg"})
                 for line in lines:
                     result = get_match_result(matchday_date, line)
-                    matchday_results.append(result)
+                    # matchday_results.append(result)
+                    # output in reverse order, so insert in reverse order
+                    matchday_results.insert(0, result)
                 try:
                     spo = results[str(matchday)]
                     sp = spo + matchday_results
@@ -83,15 +85,15 @@ def get_match_result(matchday_date, zeile):
         team_guest_add = team_guest_add.text.strip()
     else:
         team_guest_add = ''
+    final_score_str = 'n/a'
     final_score = zeile.find("span", {"class": "sc-bdfBwQ fduPYt"})
-    # not yet finished
-    if final_score is None:
-        final_score = zeile.find("span", {"class": "sc-bdfBwQ kvOzcQ"})
-    # canceled
-    if final_score is None:
-        final_score = zeile.find("span", {"class": "sc-bdfBwQ fwsGyn sc-1rxhndz-6 iBFqGw"})
     if final_score is not None:
-        final_score = final_score.text.strip()
+        final_score_str = final_score.text.strip()
+    else:
+        # not yet finished or cancelled
+        final_score = zeile.find("span", {"class": "sc-bdfBwQ fwsGyn sc-1rxhndz-6 iBFqGw"})
+        if final_score is not None:
+            final_score_str = '({})'.format(final_score.text.strip())
     result = dict()
     result['datum'] = matchday_date
     result['name_heim'] = team_home + ' ' + team_home_add
@@ -101,7 +103,7 @@ def get_match_result(matchday_date, zeile):
         result['tore_gast'] = final_score.split(':')[1]
     except:
         pass
-    result['endstand'] = final_score
+    result['endstand'] = final_score_str
     return result
 
 
