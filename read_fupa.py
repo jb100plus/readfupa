@@ -13,7 +13,7 @@ except ImportError:
 # sudo apt install wkhtmltopdf
 
 path = 'd:\\fupa\\'  # {]\\'.format(date.today().strftime('%Y%m%d'))
-path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
+# path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
 wochentage = ('Mo', 'Die', 'Mi', 'Do', 'Fr', 'Sa', 'So')
 
 # '.erg {background-color: rgba(0, 0, 0, 0.5); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
@@ -34,7 +34,7 @@ def fetchurl(url):
         url,
         data=None,
         headers={
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:92.0) Gecko/20100101 Firefox/92.0'
         }
     )
     f = urllib.request.urlopen(req)
