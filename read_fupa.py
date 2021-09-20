@@ -142,26 +142,32 @@ def get_tabelle(url):
     return ligatabelle
 
 
-def print_ergebnisse(liga, spieltag, ergebnisse):
+def print_ergebnisse(liga, spieltag, ergebnisse, f_erg):
     html = html_head
     html += '<body class="erg"><table><caption>Ergebnisse {}. Spieltag {}</caption>'.format(spieltag, liga)
-    # print('Ergebnisse {}. Spieltag {}'.format(spieltag, liga))
+    print('Ergebnisse {}. Spieltag {}\n'.format(spieltag, liga), file=f_erg)
     # [::-1] damit die Liste chronologisch sortiert ist
     for erg in ergebnisse[::-1]:
         datum = datetime.datetime.strptime(erg['datum'], '%d.%m.%Y')
         wt_tag = '{}., {}'.format(wochentage[datum.date().weekday()], datum.strftime('%d.%m.' ))
-        # print('{} {:<20} : {:<20} {:<8}'.format(wt_tag, erg['name_heim'], erg['name_gast'], erg['endstand']))
+        print('{} {:<20} : {:<20} {:<8}'.format(wt_tag, erg['name_heim'], erg['name_gast'], erg['endstand']), file=f_erg)
         html += f"<tr><td>{wt_tag}</td><td>{erg['name_heim']}</td><td>-</td>" \
                 f"<td>{erg['name_gast']}</td><td>{erg['endstand']}</td></tr>"
     html += '</table></div></body></html>'
+    print('\n\n', file=f_erg)
+    f_erg.flush()
     # show_html(html)
     options = {'width': 1200, 'transparent': '','quiet': ''}
     imgkit.from_string(html, path + liga + '_Ergebnis.png', options=options)
 
 
-def print_tabelle(liga, spieltag, ligatabelle):
-    #for pos in ligatabelle:
-    #    print(pos['platz'], pos['mannschaft'], pos['spiele'], pos['tordiff'],pos['punkte'])
+def print_tabelle(liga, spieltag, ligatabelle, f_tab):
+    print('{} {}. Spieltag\n'.format(liga, spieltag), file=f_tab)
+    print('{:<5} {:<20} {:<8} {:<8} {:<8}'.format('platz', 'mannschaft', 'spiele', 'tordiff','punkte'), file=f_tab)
+    for pos in ligatabelle:
+        print('{:<5} {:<20} {:>5} {:>8} {:>8}'.format(pos['platz'], pos['mannschaft'], pos['spiele'], pos['tordiff'],pos['punkte']), file=f_tab)
+    print('\n\n', file=f_tab)
+    f_tab.flush()
     trstrhead = '<tr><td>{}</td><td>{}</td><td align="right">{}</td><td align="right">{}</td>' \
                 '<td align="right">{}</td></tr>'
     trstr = '<tr><td align="right" style="padding-right:50px">{}</td>' \
@@ -212,6 +218,9 @@ def main():
         liga = {'name':'1. Kreisklasse 2', 'url':'https://www.fupa.net/league/mansfeld-suedharz-erste-kreisklasse-2'}
         ligen.append(liga)
 
+        f_erg = open(path + 'ergebnisse.txt', 'w')
+        f_tab = open(path + 'tabellen.txt', 'w')
+
         for li in ligen:
             spieltag = -1
             liga = li['name']
@@ -220,10 +229,14 @@ def main():
             tabelle = get_tabelle(url + '/standing')
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
-            print_tabelle(liga, spieltag, tabelle)
+            print_tabelle(liga, spieltag, tabelle, f_tab)
             erg = get_results(url + '/matchday', spieltag)
-            print_ergebnisse(liga, spieltag, erg[str(spieltag)])
+            print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
         print('fertig')
+        f_erg.flush
+        f_erg.close()
+        f_tab.flush()
+        f_tab.close()
     else:
         print(path + ' nicht gefunden, bitte erstellen')
     exit(0)
