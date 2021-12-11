@@ -12,8 +12,8 @@ except ImportError:
 # you need to install wkhtmltopdf
 # sudo apt install wkhtmltopdf
 
-path = 'd:\\fupa\\'  # {]\\'.format(date.today().strftime('%Y%m%d'))
-# path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
+# path = 'd:\\fupa\\'  # {]\\'.format(date.today().strftime('%Y%m%d'))
+path = os.path.dirname(os.path.realpath(__file__)) + '/ergebnisse/'
 wochentage = ('Mo', 'Die', 'Mi', 'Do', 'Fr', 'Sa', 'So')
 
 # '.erg {background-color: rgba(0, 0, 0, 0.5); font-family: Lucida, sans-serif;font-size: 42px;font-weight: bold; color: Snow}' \
@@ -196,6 +196,9 @@ def print_tabelle(liga, spieltag, ligatabelle, f_tab):
     html += '</table></body></html>'
     imgkit.from_string(html, path + liga + '_Tabelle_II.png', options=options)
 
+def create_summaries()
+
+
 def main():
     if os.path.exists(path):
         ligen = list()
@@ -220,6 +223,8 @@ def main():
 
         f_erg = open(path + 'ergebnisse.txt', 'w')
         f_tab = open(path + 'tabellen.txt', 'w')
+        summary_tab = dict()
+        summary_spt = dict()
 
         for li in ligen:
             spieltag = -1
@@ -227,13 +232,16 @@ def main():
             print(liga)
             url = li['url']
             tabelle = get_tabelle(url + '/standing')
+
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle, f_tab)
+            summary_tab[liga] = dict()
+            summary_tab[liga][]
             erg = get_results(url + '/matchday', spieltag)
             print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
         print('fertig')
-        f_erg.flush
+        f_erg.flush()
         f_erg.close()
         f_tab.flush()
         f_tab.close()
