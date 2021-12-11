@@ -196,8 +196,6 @@ def print_tabelle(liga, spieltag, ligatabelle, f_tab):
     html += '</table></body></html>'
     imgkit.from_string(html, path + liga + '_Tabelle_II.png', options=options)
 
-def create_summaries()
-
 
 def main():
     if os.path.exists(path):
@@ -223,8 +221,6 @@ def main():
 
         f_erg = open(path + 'ergebnisse.txt', 'w')
         f_tab = open(path + 'tabellen.txt', 'w')
-        summary_tab = dict()
-        summary_spt = dict()
 
         for li in ligen:
             spieltag = -1
@@ -236,8 +232,6 @@ def main():
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle, f_tab)
-            summary_tab[liga] = dict()
-            summary_tab[liga][]
             erg = get_results(url + '/matchday', spieltag)
             print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
         print('fertig')
