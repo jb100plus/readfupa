@@ -42,51 +42,37 @@ def fetchurl(url):
     return html
 
 
-def get_results(url, last_matchday):
+def get_results_by_date(url, matchday):
     results = dict()
     spsoup = BeautifulSoup(fetchurl(url), 'html.parser')
-    matchday_divs = spsoup.findAll('div', {"class": "sc-4y67w2-19 kGXFCX"})
-    for matchday_div in matchday_divs:
-        matchday_results = list()
-        header = matchday_div.find('div', {"class": "sc-4y67w2-14 dnRykN"}).text.strip()
-        if 'Spieltag' in header:
-            matchday_date = matchday_div.find('div', {"class": "sc-4y67w2-15 hYAxxY"}).text.strip()
-            mdtemp = header.split(',')[1]
-            mdtemp = mdtemp.split('.')[0]
-            mdtemp = mdtemp.strip()
-            matchday =  int(mdtemp)
-            if matchday == last_matchday:
-                lines = matchday_div.findAll('div', {"class": "sc-1rxhndz-2 kjfxdg"})
-                for line in lines:
-                    result = get_match_result(matchday_date, line)
-                    # matchday_results.append(result)
-                    # output in reverse order, so insert in reverse order
-                    matchday_results.insert(0, result)
-                try:
-                    spo = results[str(matchday)]
-                    sp = spo + matchday_results
-                    results[str(matchday)] = sp
-                except KeyError:
-                    results[str(matchday)] = matchday_results
+    now =  datetime.datetime.now()
+
+    for d in range(0, 6):
+        datum = now + + datetime.timedelta(days=-d)
+        datumstr = datum.strftime("%Y-%m-%d")
+        spiele_datum = spsoup.find("div", {"id": datumstr})
+        print(datumstr)
+        if spiele_datum is not None:
+            lines = spiele_datum.findAll('div', {"class": "sc-1rxhndz-2 kjfxdg"})
+            matchday_results = list()
+            for line in lines:
+                result = get_match_result(datumstr, line)
+                matchday_results.append(result)
+            try:
+                spo = results[str(matchday)]
+                sp = spo + matchday_results
+                results[str(matchday)] = sp
+            except KeyError:
+                results[str(matchday)] = matchday_results
     return results
 
 
 def get_match_result(matchday_date, zeile):
-    teams = zeile.findAll('div', {"class": "sc-1rxhndz-1 fTnXZf"})
-    team_home = teams[0].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
-    team_home_add = teams[0].find("span", {"class": "sc-bdfBwQ cvbBOD"})
-    if team_home_add is not None:
-        team_home_add = team_home_add.text.strip()
-    else:
-        team_home_add = ''
-    team_guest = teams[1].find("span", {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"}).text.strip()
-    team_guest_add = teams[1].find("span", {"class": "sc-bdfBwQ cvbBOD"})
-    if team_guest_add is not None:
-        team_guest_add = team_guest_add.text.strip()
-    else:
-        team_guest_add = ''
+    teams = zeile.findAll('span', {"class": "sc-lhxcmh-0 jOiTFY sc-1e04cm7-5 kUXbCS"})
+    team_home = teams[0].text.strip()
+    team_guest = teams[1].text.strip()
     final_score_str = 'n/a'
-    final_score = zeile.find("span", {"class": "sc-bdfBwQ fduPYt"})
+    final_score = zeile.find("span", {"class": "sc-lhxcmh-0 hNbCpC"})
     if final_score is not None:
         final_score_str = final_score.text.strip()
     else:
@@ -96,11 +82,11 @@ def get_match_result(matchday_date, zeile):
             final_score_str = '({})'.format(final_score.text.strip())
     result = dict()
     result['datum'] = matchday_date
-    result['name_heim'] = team_home + ' ' + team_home_add
-    result['name_gast'] = team_guest + ' ' + team_guest_add
+    result['name_heim'] = team_home
+    result['name_gast'] = team_guest
     try:
-        result['tore_heim'] = final_score.split(':')[0]
-        result['tore_gast'] = final_score.split(':')[1]
+        result['tore_heim'] = final_score_str.split(':')[0]
+        result['tore_gast'] = final_score_str.split(':')[1]
     except:
         pass
     result['endstand'] = final_score_str
@@ -120,23 +106,20 @@ def get_tabelle(url):
     ligatabelle = list()
     ltab = soup.findAll('div', {"class": "sc-1nnnh72-4 hQapSL"})
     for row in ltab:
-        next = row.find('div', {"class": "sc-1nnnh72-1 lfSBRq"})
-        platz = next.find('span', {"class": "sc-bdfBwQ cvbBOD"})
-        next = row.find('div', {"class": "sc-1nnnh72-2 efspqt"})
-        mannschaft = next.find('span', {"class": "sc-bdfBwQ cvbBOD sc-1e04cm7-5 kUXbCS"})
-
-        next = row.findAll('div', {"class": "sc-1nnnh72-1 cGvom"})
-        spiele = next[0].find('span', {"class": "sc-bdfBwQ cvbBOD"})
-        tordiff = next[1].find('span', {"class": "sc-bdfBwQ cvbBOD"})
-        punkte = next[2].find('span', {"class": "sc-bdfBwQ cvbBOD"})
+        platz = row.find('span', {"sc-lhxcmh-0 jOiTFY"}).text.strip()
+        mannschaft = row.find('span', {"sc-lhxcmh-0 jOiTFY sc-1e04cm7-5 kUXbCS"}).text.replace('LIVE', '').strip()
+        ergebnisse = row.findAll('span', {"class": "sc-lhxcmh-0 jOiTFY"})
+        spiele = ergebnisse[2].text.strip()
+        tordiff = ergebnisse[5].text.strip()
+        punkte = ergebnisse[6].text.strip()
 
         veraenderung = None # row.find('span', {"class": ""})
         platzierung = dict()
-        platzierung['platz'] = platz.text.strip()
-        platzierung['mannschaft'] = mannschaft.text.replace('LIVE', '').strip()
-        platzierung['spiele'] = spiele.text.strip()
-        platzierung['tordiff'] = tordiff.text.strip()
-        platzierung['punkte'] = punkte.text.strip()
+        platzierung['platz'] = platz
+        platzierung['mannschaft'] = mannschaft
+        platzierung['spiele'] = spiele
+        platzierung['tordiff'] = tordiff
+        platzierung['punkte'] = punkte
         # platzierung['veraenderung'] = veraenderung.text.strip()
         ligatabelle.append(platzierung)
     return ligatabelle
@@ -148,7 +131,7 @@ def print_ergebnisse(liga, spieltag, ergebnisse, f_erg):
     print('Ergebnisse {}. Spieltag {}\n'.format(spieltag, liga), file=f_erg)
     # [::-1] damit die Liste chronologisch sortiert ist
     for erg in ergebnisse[::-1]:
-        datum = datetime.datetime.strptime(erg['datum'], '%d.%m.%Y')
+        datum = datetime.datetime.strptime(erg['datum'], '%Y-%m-%d')
         wt_tag = '{}., {}'.format(wochentage[datum.date().weekday()], datum.strftime('%d.%m.' ))
         print('{} {:<20} : {:<20} {:<8}'.format(wt_tag, erg['name_heim'], erg['name_gast'], erg['endstand']), file=f_erg)
         html += f"<tr><td>{wt_tag}</td><td>{erg['name_heim']}</td><td>-</td>" \
@@ -232,7 +215,7 @@ def main():
             for pos in tabelle:
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle, f_tab)
-            erg = get_results(url + '/matchday', spieltag)
+            erg = get_results_by_date(url + '/matches?pointer=prev', spieltag)
             print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
         print('fertig')
         f_erg.flush()
