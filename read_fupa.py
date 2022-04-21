@@ -47,11 +47,10 @@ def get_results_by_date(url, matchday):
     spsoup = BeautifulSoup(fetchurl(url), 'html.parser')
     now =  datetime.datetime.now()
 
-    for d in range(0, 6):
+    for d in range(0, 7):
         datum = now + + datetime.timedelta(days=-d)
         datumstr = datum.strftime("%Y-%m-%d")
         spiele_datum = spsoup.find("div", {"id": datumstr})
-        print(datumstr)
         if spiele_datum is not None:
             lines = spiele_datum.findAll('div', {"class": "sc-1rxhndz-2 kjfxdg"})
             matchday_results = list()
@@ -68,7 +67,7 @@ def get_results_by_date(url, matchday):
 
 
 def get_match_result(matchday_date, zeile):
-    teams = zeile.findAll('span', {"class": "sc-lhxcmh-0 jOiTFY sc-1e04cm7-5 kUXbCS"})
+    teams = zeile.findAll('span', {"class": "sc-lhxcmh-0 jOiTFY sc-1e04cm7-4 rQScf"})
     team_home = teams[0].text.strip()
     team_guest = teams[1].text.strip()
     final_score_str = 'n/a'
@@ -107,7 +106,7 @@ def get_tabelle(url):
     ltab = soup.findAll('div', {"class": "sc-1nnnh72-4 hQapSL"})
     for row in ltab:
         platz = row.find('span', {"sc-lhxcmh-0 jOiTFY"}).text.strip()
-        mannschaft = row.find('span', {"sc-lhxcmh-0 jOiTFY sc-1e04cm7-5 kUXbCS"}).text.replace('LIVE', '').strip()
+        mannschaft = row.find('span', {"sc-lhxcmh-0 jOiTFY sc-1e04cm7-4 rQScf"}).text.replace('LIVE', '').strip()
         ergebnisse = row.findAll('span', {"class": "sc-lhxcmh-0 jOiTFY"})
         spiele = ergebnisse[2].text.strip()
         tordiff = ergebnisse[5].text.strip()
@@ -216,7 +215,10 @@ def main():
                 spieltag = max(spieltag, int(pos['spiele']))
             print_tabelle(liga, spieltag, tabelle, f_tab)
             erg = get_results_by_date(url + '/matches?pointer=prev', spieltag)
-            print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
+            if len(erg) > 0:
+                print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
+            else:
+                print('keine Ergebnisse für {}'.format(liga))
         print('fertig')
         f_erg.flush()
         f_erg.close()
