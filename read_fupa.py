@@ -219,7 +219,7 @@ def main():
                 print_ergebnisse(liga, spieltag, erg[str(spieltag)], f_erg)
             else:
                 print('keine Ergebnisse für {}'.format(liga))
-        print('fertig :-)')
+        print('fertig')
         f_erg.flush()
         f_erg.close()
         f_tab.flush()
